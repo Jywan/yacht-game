@@ -20,6 +20,9 @@ type GameState = {
     held: boolean[];
     rollsLeft: 0 | 1 | 2 | 3;
     
+    // animation trigger
+    rollId: number;
+
     // score
     scores: Scores;
 
@@ -47,6 +50,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     rollsLeft: 3,
     scores: makeEmptyScores(),
 
+    rollId: 0,
+
     initGame: () => 
         set({
             turnIndex: 0,
@@ -56,6 +61,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             held: Array.from({ length: DICE_COUNT }, () => false),
             rollsLeft: 3,
             scores: makeEmptyScores(),
+            rollId: 0,
         }),
     
     initTurn: () =>
@@ -63,6 +69,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             dice: rollDice(DICE_COUNT),
             held: Array.from({ length: DICE_COUNT }, () => false),
             rollsLeft: 3,
+            rollId: get().rollId + 1,
         }),
     
     toggleHold: (index: number) =>
@@ -73,14 +80,15 @@ export const useGameStore = create<GameState>((set, get) => ({
             return { held: next };
         }),
     
-        roll: () => {
-        const { dice, held, rollsLeft, phase } = get();
+    roll: () => {
+        const { dice, held, rollsLeft, phase, rollId } = get();
         if (phase !== "rolling") return;
         if (rollsLeft <= 0) return;
     
         set({
             dice: rerollUnheldDice(dice, held),
             rollsLeft: (rollsLeft - 1) as 0 | 1 | 2 | 3,
+            rollId: rollId + 1,
         });
     },
 
@@ -90,7 +98,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
     
     commitScore: (category: Category) => {
-        const { scores, phase, turnIndex, maxTurns } = get();
+        const { scores, phase, turnIndex, maxTurns, rollId } = get();
         if (phase !== "rolling") return;
         if (scores[category] !== null) return; // 이미 사용
     
@@ -105,6 +113,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             set({
                 scores: nextScores,
                 phase: "finished",
+                rollId: rollId + 1,
             });
             return;
         }
@@ -115,6 +124,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             dice: rollDice(DICE_COUNT),
             held: Array.from({ length: DICE_COUNT }, () => false),
             rollsLeft: 3,
+            rollId: rollId + 1,
         });
     },
     
