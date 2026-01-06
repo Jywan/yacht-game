@@ -21,7 +21,7 @@ type GameState = {
     rollsLeft: 0 | 1 | 2 | 3;
     
     // animation trigger
-    rollId: number;
+    rollId: number
 
     // score
     scores: Scores;

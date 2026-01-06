@@ -1,4 +1,5 @@
-import DiceTray from "../components/DiceTray";
+// import DiceTray from "../components/DiceTray";
+import DiceTray3D from "../components/DiceTray3D"
 import ScoreTableV2 from "../components/ScoreTableV2";
 import { useGameStore } from "../store/gameStore";
 
@@ -9,7 +10,8 @@ export default function GameScreen() {
     const turnIndex = useGameStore((s) => s.turnIndex);
     const maxTurns = useGameStore((s) => s.maxTurns);
     const phase = useGameStore((s) => s.phase);
-    const totalScore = useGameStore((s) => s.totalScore);
+    // const totalScore = useGameStore((s) => s.totalScore);  // v1 or v2
+    const total = useGameStore((s) => s.totalScore()); // v3
 
     return (
         <div style={{ 
@@ -42,7 +44,8 @@ export default function GameScreen() {
 
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <HudPill label="Rolls Left" value={`${rollsLeft}`} />
-                    <HudPill label="Total" value={`${totalScore()}`} />
+                    {/* <HudPill label="Total" value={`${totalScore()}`} /> */}
+                    <HudPill label="Total" value={`${total}`} />
                     {phase === "finished" && <HudPill label="Status" value="Finished" />}
                 </div>
 
@@ -98,7 +101,8 @@ export default function GameScreen() {
                 >
                     <SectionTitle title="Dice" subtitle="Click a die to hold it. Roll up to 3 times."/>
                     <div style={{ marginTop: 12 }}>
-                        <DiceTray />
+                    {/* <DiceTray /> */}
+                        <DiceTray3D />
                     </div>
 
                     <div
