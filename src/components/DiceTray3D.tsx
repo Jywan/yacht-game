@@ -11,6 +11,7 @@ function Floor() {
     const [ref] = usePlane(() => ({
         rotation: [-Math.PI / 2, 0, 0],
         position: [0, 0, 0],
+        material: { friction: 0.98, restitution: 0.05 },
     }));
 
     return (
@@ -95,8 +96,8 @@ export default function DiceTray3D() {
                             index={i}
                             rollId={rollId}
                             spawn={spawn}
-                            modelScale={1}
-                            colliderSize={[1, 1, 1]}
+                            modelScale={0.25}
+                            colliderInflate={1.1}
                             impulseBase={[-10, 6, 0]}
                             torqueBase={[6, 10, 6]}
                         />
