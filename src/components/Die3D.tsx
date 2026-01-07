@@ -1,90 +1,91 @@
-import { useEffect, useRef } from "react";
-import { Quaternion } from "three";
+import { useEffect, useMemo, useRef } from "react";
 import { useBox } from "@react-three/cannon";
-import { topFaceFromQuaternion } from "../domain/diceMath";
-import { useGameStore } from "../store/gameStore";
+import { useGLTF } from "@react-three/drei";
+
+type Vec3 = [number, number, number];
 
 type Props = {
     rollId: number;
-    spawn: [number, number, number];
+    index: number;
+    
+    // 던질 때 시작 위치
+    spawn: Vec3;
+    
+    // 우 -> 좌: x는 음수로
+    impulseBase?: Vec3;
+    torqueBase?: Vec3;
+
+    // 모델/콜라이더 튜닝
+    modelScale?: number;
+    colliderSize?: Vec3;
 };
 
-export default function Die3D({ rollId, spawn }: Props) {
-    const reportTopValue = useGameStore((s) => s.reportTopValue);
+const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
-    const settledRef = useRef(false);
-    const stillFramesRef = useRef(0);
-    const rollStartRef = useRef(0);
+export default function Die3D({
+    rollId,
+    index,
+    spawn,
+    impulseBase = [-10, 6, 0],
+    torqueBase = [6, 10, 6],
+    modelScale = 1,
+    colliderSize = [1, 1, 1],
+}: Props) {
+    const { scene } = useGLTF("/assets/dice.glb");
+
+    // glb 공유 방지
+    const model = useMemo(() => scene.clone(), [scene]);
+
+    // spawn이 리렌더 때마다 새 배열이 되지 않게 ref에 보관
+    const spawnRef = useRef<Vec3>(spawn);
+    useEffect(() => {
+        spawnRef.current = spawn;
+    }, [spawn]);
 
     const [ref, api] = useBox(() => ({
         mass: 1,
-        args: [1, 1, 1],
+        args: colliderSize,
         position: spawn,
         linearDamping: 0.35,
         angularDamping: 0.35,
+        material: { friction: 0.9, restitution: 0.2 },
     }));
 
-    // roll
+    // Roll: 버튼으로 rollId가 바뀔 때만 동작
     useEffect(() => {
-        settledRef.current = false;
-        stillFramesRef.current = 0;
-        rollStartRef.current = performance.now();
+        if (rollId === 0) return;
 
-        api.position.set(spawn[0], spawn[1], spawn[2]);
-        api.velocity.set(-7, 2, (Math.random() - 0.5) * 2);
-        api.angularVelocity.set(
-        (Math.random() - 0.5) * 8,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 8
+        const [sx, sy, sz] = spawnRef.current;
+
+        // 리셋
+        api.position.set(sx, sy, sz);
+        api.velocity.set(0, 0, 0);
+        api.angularVelocity.set(0, 0, 0);
+
+        // 우 -> 좌
+        api.applyImpulse(
+            [
+                impulseBase[0] + rand(-1.2, 1.2),
+                impulseBase[1] + rand(-0.6, 0.8),
+                impulseBase[2] + rand(-1.0, 1.0),
+            ],
+            [0, 0, 0]
         );
-    }, [rollId]);
 
-    // settle detection
-    useEffect(() => {
-        let v: [number, number, number] = [0, 0, 0];
-        let av: [number, number, number] = [0, 0, 0];
-        let p: [number, number, number] = spawn;
-        let qArr: [number, number, number, number] = [0, 0, 0, 1];
-
-        const unsubV = api.velocity.subscribe((x) => (v = x as any));
-        const unsubAV = api.angularVelocity.subscribe((x) => (av = x as any));
-        const unsubP = api.position.subscribe((x) => (p = x as any));
-        const unsubQ = api.quaternion.subscribe((x) => (qArr = x as any));
-
-        const id = window.setInterval(() => {
-        if (settledRef.current) return;
-
-        const elapsed = performance.now() - rollStartRef.current;
-        const lin = Math.hypot(v[0], v[1], v[2]);
-        const ang = Math.hypot(av[0], av[1], av[2]);
-        const onFloor = p[1] < 0.62;
-
-        if (elapsed > 700 && onFloor && lin < 0.12 && ang < 0.18) {
-            stillFramesRef.current += 1;
-        } else {
-            stillFramesRef.current = 0;
-        }
-
-        if (stillFramesRef.current >= 18) {
-            settledRef.current = true;
-            const q = new Quaternion(qArr[0], qArr[1], qArr[2], qArr[3]);
-            reportTopValue(topFaceFromQuaternion(q));
-        }
-        }, 16);
-
-        return () => {
-        window.clearInterval(id);
-        unsubV();
-        unsubAV();
-        unsubP();
-        unsubQ();
-        };
-    }, []);
+        api.applyTorque(
+            [
+                impulseBase[0] + rand(-2.5, 2.5),
+                impulseBase[1] + rand(-3.0, 3.0),
+                impulseBase[2] + rand(-2.5, 2.5),
+            ]
+        );
+    }, [rollId, api, impulseBase, torqueBase]);
 
     return (
-        <mesh ref={ref as any} castShadow receiveShadow>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#fff" />
-        </mesh>
+        <group ref={ref as any} name={`die-${index}`}>
+            <primitive object={model} scale={modelScale} />
+        </group>
     );
 }
+
+useGLTF.preload("/assets/dice.glb")

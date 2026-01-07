@@ -3,11 +3,10 @@ import { useGameStore } from "./store/gameStore";
 
 export default function App() {
   const roll = useGameStore((s) => s.roll);
-  const topValue = useGameStore((s) => s.topValue);
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, position: "relative", zIndex: 10 }}>
         <button
           onClick={roll}
           style={{
@@ -16,16 +15,12 @@ export default function App() {
             border: "1px solid #ccc",
             background: "#111",
             color: "white",
-            fontWeight: 700,
+            fontWeight: 800,
             cursor: "pointer",
           }}
         >
           Roll (Right → Left)
         </button>
-
-        <div style={{ fontWeight: 700 }}>
-          Top value: {topValue}
-        </div>
       </div>
 
       <DiceTray3D />
