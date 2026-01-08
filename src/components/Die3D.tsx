@@ -87,11 +87,9 @@ export default function Die3D({
     useEffect(() => {
         if (rollId === 0) return;
 
-        // ✅ 이미 이 rollId로 던졌으면 절대 재실행 금지
         if (thrownRollIdRef.current === rollId) return;
         thrownRollIdRef.current = rollId;
 
-        // 이번 rollId settle 리셋
         settledRollIdRef.current = -1;
         stillFramesRef.current = 0;
         rollStartRef.current = performance.now();
@@ -160,7 +158,6 @@ export default function Die3D({
         const id = window.setInterval(() => {
             if (rollId === 0) return;
 
-            // ✅ 이미 이번 rollId settle 처리했다면 종료
             if (settledRollIdRef.current === rollId) return;
 
             const elapsed = performance.now() - rollStartRef.current;

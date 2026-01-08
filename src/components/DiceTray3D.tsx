@@ -16,7 +16,7 @@ function Floor() {
 
     return (
         <mesh ref={ref as any} receiveShadow>
-            <planeGeometry />
+            <planeGeometry args={[60, 30]}/>
             <meshStandardMaterial color="#f6f7fb" roughness={1} metalness={0} />
         </mesh>
     );
@@ -31,7 +31,7 @@ function StaticBox({ position, size }: { position: Vec3; size: Vec3 }) {
 
     return (
         <mesh ref={ref as any}>
-            <boxGeometry />
+            <boxGeometry args={size}/>
             <meshStandardMaterial transparent opacity={0} />
         </mesh>
     );
@@ -43,13 +43,13 @@ export default function DiceTray3D() {
     // 트레이 경계
     const L = 9.0;
     const Z = 4.0;
-    const H = 4.0;
-    const T = 0.6;
+    const H = 6.0;
+    const T = 1.2;
 
     // 우 -> 좌 주사위 던지기를 위한 스폰
     const spawns = useMemo<Vec3[]>(() => {
         return Array.from({ length: 5 }, (_, i) => {
-            const x = L - 1.3 +i * 0.15;
+            const x = L - 1.3 + i * 0.15;
             const y = 2.0 + i * 0.18;
             const z = (i - 2) * 0.65;
             return [x, y, z];
